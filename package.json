@@ -18,7 +18,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dungeon": "babel --presets es2015 -d lib/ src/Dungeon.js"
+    "dungeon": "babel --presets es2015 -d lib/ src/Dungeon.js && node lib/src/Dungeon.js"
   },
   "eslintConfig": {
     "extends": [

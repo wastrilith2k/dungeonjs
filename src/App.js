@@ -1,24 +1,23 @@
-import logo from './logo.svg';
 import './App.css';
+import { createDungeon } from './Dungeon';
 
+const types = ['wall', 'corridor', 'room'];
 
-function App() {
+function App () {
+  const dungeon = createDungeon();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div id="dungeon">
+      {
+        dungeon.map((col, colIdx) => {
+          return (col.map((row, rowIdx) => {
+            const styles = {top: `${rowIdx * 5}px`, left: `${colIdx * 5}px`};
+            return (
+              <div className={`cell ${types[row.type]}`} style={styles} />
+            )
+          }))
+        })
+      }
     </div>
   );
 }

@@ -1,13 +1,16 @@
-const cells = [];
+const dungeon = [];
 const dungeonHeight = 80;
 const dungeonWidth = 160;
 const WALL = 0;
-// const roomTries = 200;
+// const CORRIDOR = 1;
+const ROOM = 2;
+
 
 for (let x = 0; x < dungeonWidth; x++) {
-  cells[x] = [];
+  dungeon[x] = [];
   for (let y = 0; y < dungeonHeight; y++) {
-    cells[x][y] = WALL;
+
+    dungeon[x][y] = {type: WALL};
   }
 }
 
@@ -19,34 +22,45 @@ const randomInt = (max) => {
 }
 
 const isRoomFree = (top, left, height, width) => {
-  for (let x = left; x <= (left + width); x++) {
-    for (let y = top; y <= (top + height); y++) {
-      // console.log(`x: ${x}, y: ${y}`)
-      if (cells[x][y] !== WALL) return false;
+  for (let x = left - 1; x <= (left + width) + 1; x++) {
+    for (let y = top - 1; y <= (top + height) + 1; y++) {
+      if (dungeon[x][y]['type'] !== WALL) return false;
     }
   }
   return true;
 }
 
-const createRoom = () => {
-  const width = randomInt(5);
-  const height = randomInt(5);
+const createRoom = (props) => {
+  const {maxWidth = 5, maxHeight = 5, roomIdx = -1} = props;
+  const width = randomInt(maxWidth - 1) + 1;
+  const height = randomInt(maxHeight - 1) + 1;
 
   const top = randomInt(workableHeight - height);
   const left = randomInt(workableWidth - width);
 
   const save = isRoomFree(top, left, height, width);
-  console.log(save);
+
   if (save) {
-    for (let x = left; x <= (left + width); x++) {
-      for (let y = top; y <= (top + height); y++) {
-        cells[x][y] = 1;
+    console.log('Creating room');
+    for (let x = left; x < (left + width); x++) {
+      for (let y = top; y < (top + height); y++) {
+        dungeon[x][y] = {type: ROOM, roomIdx};
       }
     }
   }
 };
 
-for (let i = 0; i < 100; i++) {
-  console.log('Creating room');
-  createRoom();
+// const addCorridors = () => {
+
+// }
+
+export const createDungeon = (props = {}) => {
+  const { roomAttempts = 500 } = props;
+  for (let i = 0; i < roomAttempts; i++) {
+    createRoom({roomIdx: i});
+  }
+
+  return dungeon;
 }
+
+createDungeon({});

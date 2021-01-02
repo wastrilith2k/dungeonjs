@@ -9,13 +9,20 @@
 
 .cell {
   position: absolute;
-  width: 5px;
-  height: 5px;
-  background-color: white;;
+  background-color: white;
+  box-sizing: border-box;
 }
 
 .wall {
   background-color: black;
+}
+
+.connection {
+  background-color: magenta;
+}
+
+.corridor, .room {
+  border: 1px solid grey;
 }
 
 

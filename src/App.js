@@ -1,7 +1,6 @@
 import './App.css';
 import { createDungeon } from './Dungeon';
-
-const types = ['wall', 'corridor', 'room'];
+import { typeMap, scale } from './Constants';
 
 function App () {
   const dungeon = createDungeon();
@@ -11,9 +10,14 @@ function App () {
       {
         dungeon.map((col, colIdx) => {
           return (col.map((row, rowIdx) => {
-            const styles = {top: `${rowIdx * 5}px`, left: `${colIdx * 5}px`};
+            const styles = {
+              top: `${rowIdx * scale}px`,
+              left: `${colIdx * scale}px`,
+              width: `${scale}px`,
+              height: `${scale}px`
+            };
             return (
-              <div className={`cell ${types[row.type]}`} style={styles} />
+              <div className={`cell ${typeMap[row.type]}`} style={styles} />
             )
           }))
         })

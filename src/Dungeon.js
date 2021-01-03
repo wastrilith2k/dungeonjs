@@ -3,18 +3,26 @@ const dungeon = [];
 const regions = [];
 const workableHeight = dungeonHeight - 1;
 const workableWidth = dungeonWidth - 1;
+let regionIdx;
 
 const setCell = (x, y, type) => {
   if (!Array.isArray(dungeon[x])) dungeon[x] = [];
-  const region = type === types.WALL ? -1 : regions.length;
   dungeon[x][y] = {
     type,
-    region
+    regionIdx
   }
-  // push onto array for this region
+
+}
+
+const createRegion = () => {
+  regions.push({
+    cells: []
+  });
+  regionIdx = regions.length - 1;
 }
 
 const init = () => {
+  createRegion();
   for (let x = 0; x <= dungeonWidth; x++) {
     dungeon[x] = [];
     for (let y = 0; y <= dungeonHeight; y++) {

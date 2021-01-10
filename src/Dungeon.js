@@ -11,7 +11,7 @@ const setCell = (x, y, type) => {
     type,
     regionIdx
   }
-
+  regions[regionIdx]['cells'].push({ x, y });
 }
 
 const createRegion = () => {
@@ -30,7 +30,6 @@ const init = () => {
     }
   }
 }
-
 
 const randomInt = (max) => {
   return Math.floor(Math.random() * Math.floor(max)) + 1;
@@ -55,9 +54,7 @@ const createRoom = (props) => {
   const save = isRoomFree(top, left, height, width);
 
   if (save) {
-    regions.push({
-      top, left, height, width
-    });
+    createRegion();
     for (let x = left; x < (left + width); x++) {
       for (let y = top; y < (top + height); y++) {
         setCell(x, y, types.ROOM);
@@ -142,16 +139,18 @@ const canHaveConnection = ({ x, y }) => {
 }
 
 const addConnections = () => {
+  const availableConnections = [];
   for (let x = 1; x < dungeonWidth; x++) {
     for (let y = 1; y < dungeonHeight; y++) {
       if (dungeon[x][y].type === types.WALL && canHaveConnection({ x, y })) {
         setCell(x, y, types.CONNECTION);
+        availableConnections.push({ x, y });
       }
     }
   }
 
   // Start at the last region
-
+  
 
 }
 

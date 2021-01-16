@@ -1,9 +1,11 @@
 import { defaultRoomAttempts, corridorTurnChance, types, dungeonWidth, dungeonHeight, Direction } from './Constants';
 const dungeon = [];
-const regions = [];
+const regions = [{cells: []}];
 const workableHeight = dungeonHeight - 1;
 const workableWidth = dungeonWidth - 1;
-let regionIdx;
+// eslint-disable-next-line no-unused-vars
+const extraConnectorChance = 50;
+let regionIdx; // An index of 0 in the array screws things up
 
 const setCell = (x, y, type) => {
   if (!Array.isArray(dungeon[x])) dungeon[x] = [];
@@ -127,31 +129,101 @@ const createCorridor = (x, y) => {
   }
 }
 
-const canHaveConnection = ({ x, y }) => {
+// eslint-disable-next-line no-unused-vars
+const oneIn = range => randomInt(range) === 1;
+
+const addAdjacentRegionsToCell = ({ x, y }) => {
   const validTypes = [types.ROOM, types.CORRIDOR];
-  const prevX = dungeon[x - 1][y].type;
-  const nextX = dungeon[x + 1][y].type;
-  if (prevX !== nextX && validTypes.includes(prevX) && validTypes.includes(nextX)) return true
-  const prevY = dungeon[x][y - 1].type;
-  const nextY = dungeon[x][y + 1].type;
-  if (prevY !== nextY && validTypes.includes(prevY) && validTypes.includes(nextY)) return true
-  return false;
+
+  const regions = Object.keys(Direction).reduce((regs, dir) => {
+    const testPos = shiftCell({ x, y, dir });
+    const potentialConnection = dungeon[testPos.x][testPos.y];
+    if (validTypes.includes(potentialConnection.type) && !regs.includes(potentialConnection.regionIdx)) regs.push(potentialConnection.regionIdx);
+    return regs;
+  }, []);
+  const baseCell = dungeon[x][y];
+  return { ...baseCell, x, y, regions };
 }
 
 const addConnections = () => {
-  const availableConnections = [];
+  let availableConnections = [];
   for (let x = 1; x < dungeonWidth; x++) {
     for (let y = 1; y < dungeonHeight; y++) {
-      if (dungeon[x][y].type === types.WALL && canHaveConnection({ x, y })) {
-        setCell(x, y, types.CONNECTION);
-        availableConnections.push({ x, y });
+      if (dungeon[x][y].type === types.WALL) {
+        const potentialConnection = addAdjacentRegionsToCell({ x, y });
+        if (potentialConnection.regions.length >= 2) {
+          setCell(x, y, types.CONNECTION);
+          availableConnections.push(potentialConnection);
+        }
       }
     }
   }
 
-  // Start at the last region
-  
+  // return;
+  const regionMap = [];
+  let openRegions = [];
+  regions.forEach((_, regionIdx) => {
+    if (regionIdx > 0) {
+      regionMap[regionIdx] = regionIdx;
+      openRegions[regionIdx] = regionIdx;
+    }
+  });
 
+  let iterations = 0;
+
+  console.log('Started Iteration');
+  while (openRegions.length > 1 && iterations < 5000) {
+
+    iterations++;
+
+    // Pick a random connector
+    const connection = availableConnections[randomInt(availableConnections.length - 1)];
+
+    // Set the random connector to a door
+    setCell(connection.x, connection.y, types.DOOR);
+
+    // Get the region for the connector
+    const dest = connection.regions[0];
+
+    // Get all other regions listed in this connection
+    const sources = connection.regions.filter(source => source !== dest);
+
+    // Map the other regions on the connection and map them to the destination region
+    regions.forEach((_, regIdx) => {
+      if (sources.includes(regionMap[regIdx])) regionMap[regIdx] = dest;
+    })
+
+    // Remove the sources from the list of open regions as they no longer "exist"
+    // as they are part of the destination region now
+    openRegions = openRegions.filter(r => !sources.includes(r));
+
+    // Remove connections that aren't needed
+    availableConnections = availableConnections.filter(cell => {
+      // Don't allow connectors right next to each other.
+      Object.keys(Direction).forEach(dir => {
+        if (shiftCell({x: cell.x, y: cell.y, dir}).type === types.DOOR) {
+          setCell(cell.x, cell.y, types.WALL);
+          return false;
+        }
+      });
+
+      // See how many regions this still spans
+      const connectedRegions = cell.regions.reduce((regs, reg) => {
+        const mappedRegion = regionMap[reg];
+        if (!regs.includes(mappedRegion)) regs.push(mappedRegion);
+        return regs;
+      }, []);
+      console.log(connectedRegions);
+      // If this cell connects to more than one mapped region, 
+      if (connectedRegions.length > 1) return true;
+
+      // Add the occasional extra door to a room
+      // if (oneIn(extraConnectorChance)) setCell(connection.x, connection.y, types.DOOR);
+      return false;
+    });
+    console.log(`Completed iteration. ${openRegions.length} regions open.`);
+  }
+  if (iterations >= 5000) console.log('Max iterations reached');
 }
 
 export const createDungeon = (props = {}) => {

@@ -13,16 +13,16 @@
   box-sizing: border-box;
 }
 
-.wall {
+.wall, .connection {
   background-color: black;
-}
-
-.connection {
-  background-color: magenta;
 }
 
 .corridor, .room {
   border: 1px solid grey;
+}
+
+.door {
+  background-color: blue;
 }
 
 

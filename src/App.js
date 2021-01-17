@@ -1,10 +1,11 @@
 import './App.css';
 import { createDungeon } from './Dungeon';
-import { typeMap, scale } from './Constants';
+import { typeMap, scale, colors, types } from './Constants';
 
 function App () {
   const dungeon = createDungeon();
 
+  const validTypes = [types.CORRIDOR, types.ROOM];
   return (
     <div id="dungeon">
       {
@@ -16,6 +17,7 @@ function App () {
               width: `${scale}px`,
               height: `${scale}px`
             };
+            if (validTypes.includes(row.type)) styles.backgroundColor = colors[row.regionIdx];
             return (
               <div className={`cell ${typeMap[row.type]}`} style={styles} />
             )

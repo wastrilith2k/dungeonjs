@@ -16,6 +16,9 @@ const setCell = (x, y, type) => {
   regions[regionIdx]['cells'].push({ x, y });
 }
 
+const setCellType = (x, y, type) => {
+  dungeon[x][y].type = type;
+}
 const createRegion = () => {
   regions.push({
     cells: []
@@ -152,7 +155,7 @@ const addConnections = () => {
       if (dungeon[x][y].type === types.WALL) {
         const potentialConnection = addAdjacentRegionsToCell({ x, y });
         if (potentialConnection.regions.length >= 2) {
-          setCell(x, y, types.CONNECTION);
+          setCellType(x, y, types.CONNECTION);
           availableConnections.push(potentialConnection);
         }
       }
@@ -170,23 +173,28 @@ const addConnections = () => {
   });
 
   let iterations = 0;
+  const maxIterations = 5000;
 
-  console.log('Started Iteration');
-  while (openRegions.length > 1 && iterations < 5000) {
+  while (openRegions.length > 1 && iterations < maxIterations) {
 
     iterations++;
 
     // Pick a random connector
     const connection = availableConnections[randomInt(availableConnections.length - 1)];
 
+    if (!connection) continue;
+
     // Set the random connector to a door
-    setCell(connection.x, connection.y, types.DOOR);
+    setCellType(connection.x, connection.y, types.DOOR);
+
+    // Find mapped regions for the connected regions of the current connector cell
+    const mappedRegions = connection.regions.map(r => regionMap[r]);
 
     // Get the region for the connector
-    const dest = connection.regions[0];
+    const dest = mappedRegions[0];
 
     // Get all other regions listed in this connection
-    const sources = connection.regions.filter(source => source !== dest);
+    const sources = mappedRegions.filter(source => source !== dest);
 
     // Map the other regions on the connection and map them to the destination region
     regions.forEach((_, regIdx) => {
@@ -202,7 +210,7 @@ const addConnections = () => {
       // Don't allow connectors right next to each other.
       Object.keys(Direction).forEach(dir => {
         if (shiftCell({x: cell.x, y: cell.y, dir}).type === types.DOOR) {
-          setCell(cell.x, cell.y, types.WALL);
+          setCellType(cell.x, cell.y, types.WALL);
           return false;
         }
       });
@@ -213,17 +221,24 @@ const addConnections = () => {
         if (!regs.includes(mappedRegion)) regs.push(mappedRegion);
         return regs;
       }, []);
-      console.log(connectedRegions);
-      // If this cell connects to more than one mapped region, 
+
+      // If this cell connects to more than one mapped region,
       if (connectedRegions.length > 1) return true;
 
       // Add the occasional extra door to a room
-      // if (oneIn(extraConnectorChance)) setCell(connection.x, connection.y, types.DOOR);
       return false;
     });
-    console.log(`Completed iteration. ${openRegions.length} regions open.`);
   }
-  if (iterations >= 5000) console.log('Max iterations reached');
+  if (iterations >= maxIterations) console.log('Max iterations reached');
+  console.log(`Finished in ${iterations} iterations. ${openRegions.length} regions open.`);
+  console.log('openRegions', openRegions);
+
+  // Remap regions
+  for (let x = 0; x <= dungeonWidth; x++) {
+    for (let y = 0; y <= dungeonHeight; y++) {
+      dungeon[x][y].region = regionMap[dungeon[x][y].regionIdx];
+    }
+  }
 }
 
 export const createDungeon = (props = {}) => {

@@ -194,6 +194,8 @@ const addConnections = () => {
 
       // Don't allow connectors right next to each other.
       Object.keys(Direction).forEach(dir => {
+        const cellToCheck = shiftCell({x: cell.x, y: cell.y, dir});
+        if (dungeon[cellToCheck.x][cellToCheck.y].type) cellToCheck.type = dungeon[cellToCheck.x][cellToCheck.y].type;
         if (shiftCell({x: cell.x, y: cell.y, dir}).type === types.DOOR) {
           setCellType(cell.x, cell.y, types.WALL);
           return false;

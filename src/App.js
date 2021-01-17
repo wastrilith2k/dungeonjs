@@ -19,7 +19,7 @@ function App () {
             };
             if (validTypes.includes(row.type)) styles.backgroundColor = colors[row.regionIdx];
             return (
-              <div className={`cell ${typeMap[row.type]}`} style={styles} />
+              <div className={`cell ${typeMap[row.type]}`} style={styles} key={`cell-${colIdx}-${rowIdx}`}/>
             )
           }))
         })

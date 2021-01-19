@@ -86,8 +86,8 @@ const shiftCell = ({ x, y, dir }) => ({
 const createCorridor = (x, y) => {
   const cells = [];
   cells.push({ x, y });
+  createRegion();
   setCell(x, y, types.CORRIDOR);
-
   const directions = Object.keys(Direction);
 
   let lastDir = directions[randomInt(directions.length - 1)];
@@ -157,6 +157,7 @@ const addConnections = () => {
 
   const regionMap = [];
   let openRegions = [];
+  console.log(regionIdx);
   for (let i = 1; i <= regionIdx; i++) {
     regionMap[i] = i;
     openRegions.push(i);
@@ -168,8 +169,8 @@ const addConnections = () => {
   while (openRegions.length > 1 && iterations < maxIterations) {
     iterations++;
     // Pick a random connector
-    const connection = availableConnections[randomInt(availableConnections.length - 1)];
-    if (!connection) continue;
+    const connection = availableConnections[randomInt(availableConnections.length) - 1];
+    if (connection === undefined) continue;
     // Set the random connector to a door
     setCellType(connection.x, connection.y, types.DOOR);
     // Find mapped regions for the connected regions of the current connector cell
@@ -180,7 +181,10 @@ const addConnections = () => {
     const sources = mappedRegions.filter((_, idx) => idx > 0);
     // Map the other regions on the connection and map them to the destination region
     for (let i = 1; i <= regionIdx; i++) {
-      if (sources.includes(regionMap[i])) regionMap[i] = dest;
+      if (sources.includes(regionMap[i])) {
+        regionMap[i] = dest;
+        // console.log(`Mapped region ${i} to region ${dest}`);
+      }
     };
     // Remove the sources from the list of open regions as they no longer "exist"
     // as they are part of the destination region now
@@ -195,8 +199,10 @@ const addConnections = () => {
       // Don't allow connectors right next to each other.
       Object.keys(Direction).forEach(dir => {
         const cellToCheck = shiftCell({x: cell.x, y: cell.y, dir});
-        if (dungeon[cellToCheck.x][cellToCheck.y].type) cellToCheck.type = dungeon[cellToCheck.x][cellToCheck.y].type;
-        if (shiftCell({x: cell.x, y: cell.y, dir}).type === types.DOOR) {
+        if (dungeon[cellToCheck.x][cellToCheck.y].type !== undefined) {
+          cellToCheck.type = dungeon[cellToCheck.x][cellToCheck.y].type;
+        }
+        if (cellToCheck.type === types.DOOR) {
           setCellType(cell.x, cell.y, types.WALL);
           return false;
         }
@@ -214,7 +220,7 @@ const addConnections = () => {
       setCellType(cell.x, cell.y, types.WALL);
 
       // Add the occasional extra door to a room
-      if (oneIn(50)) setCell(cell.x, cell.y, types.DOOR);
+      // if (oneIn(50)) setCell(cell.x, cell.y, types.DOOR);
       return false;
     });
   }

@@ -1,4 +1,4 @@
-import { defaultRoomAttempts, corridorTurnChance, types, dungeonWidth, dungeonHeight, Direction } from './Constants';
+import { defaultRoomAttempts, corridorTurnChance, types, dungeonWidth, dungeonHeight, Direction, oneInXChanceOfExtraDoor, maxFillInPasses, fillInPercentage } from './Constants';
 const dungeon = [];
 const workableHeight = dungeonHeight - 1;
 const workableWidth = dungeonWidth - 1;
@@ -130,7 +130,6 @@ const oneIn = range => randomInt(range) === 1;
 
 const addAdjacentRegionsToCell = ({ x, y }) => {
   const validTypes = [types.ROOM, types.CORRIDOR];
-
   const regions = Object.keys(Direction).reduce((regs, dir) => {
     const testPos = shiftCell({ x, y, dir });
     const potentialConnection = dungeon[testPos.x][testPos.y];
@@ -139,6 +138,48 @@ const addAdjacentRegionsToCell = ({ x, y }) => {
   }, []);
   const baseCell = dungeon[x][y];
   return { ...baseCell, x, y, regions };
+}
+
+const hasAdjacentConnection = (x, y) => {
+  const adjacentConnections = surroundingTypeCount(x, y, types.DOOR);
+  return !(adjacentConnections === 0);
+}
+
+const surroundingTypeCount = (x, y, type) => {
+  let adjacentTypeCount = 0;
+  Object.keys(Direction).forEach(dir => {
+    const cellToCheck = shiftCell({ x, y, dir });
+    if (dungeon[cellToCheck.x][cellToCheck.y].type !== undefined) {
+      cellToCheck.type = dungeon[cellToCheck.x][cellToCheck.y]['type'];
+    }
+    if (cellToCheck.type === type) {
+      adjacentTypeCount = adjacentTypeCount + 1;
+    }
+  });
+  return adjacentTypeCount;
+}
+
+const fillInDeadends = () => {
+  let iterations = 0;
+  let allPossibleFillsDone = false;
+  while (iterations < maxFillInPasses && (allPossibleFillsDone === false)) {
+    let fillCount = 0;
+    iterations = iterations + 1;
+    for (let x = 0; x <= dungeonWidth; x++) {
+      for (let y = 0; y <= dungeonHeight; y++) {
+        if (dungeon[x][y].type === types.CORRIDOR) {
+          if (surroundingTypeCount(x, y, types.WALL) === 3) {
+            if (randomInt(100) <= fillInPercentage) {
+              fillCount = fillCount + 1;
+              dungeon[x][y].type = types.WALL;
+            }
+          }
+        }
+      }
+    }
+    if (fillCount === 0) allPossibleFillsDone = true;
+  }
+  console.log(`Done filling in dead ends in ${iterations} iterations.`);
 }
 
 const addConnections = () => {
@@ -164,7 +205,7 @@ const addConnections = () => {
   }
 
   let iterations = 0;
-  const maxIterations = 5000;
+  const maxIterations = openRegions.length * 2;
 
   while (openRegions.length > 1 && iterations < maxIterations) {
     iterations++;
@@ -183,7 +224,6 @@ const addConnections = () => {
     for (let i = 1; i <= regionIdx; i++) {
       if (sources.includes(regionMap[i])) {
         regionMap[i] = dest;
-        // console.log(`Mapped region ${i} to region ${dest}`);
       }
     };
     // Remove the sources from the list of open regions as they no longer "exist"
@@ -192,21 +232,14 @@ const addConnections = () => {
 
     // Remove connections that aren't needed
     availableConnections = availableConnections.filter(cell => {
-
       // Remove current connection
       if (cell.x === connection.x && cell.y === connection.y) return false;
 
       // Don't allow connectors right next to each other.
-      Object.keys(Direction).forEach(dir => {
-        const cellToCheck = shiftCell({x: cell.x, y: cell.y, dir});
-        if (dungeon[cellToCheck.x][cellToCheck.y].type !== undefined) {
-          cellToCheck.type = dungeon[cellToCheck.x][cellToCheck.y].type;
-        }
-        if (cellToCheck.type === types.DOOR) {
-          setCellType(cell.x, cell.y, types.WALL);
-          return false;
-        }
-      });
+      if (hasAdjacentConnection(cell.x, cell.y)) {
+        setCellType(cell.x, cell.y, types.WALL);
+        return false;
+      }
 
       // See how many regions this still spans
       const connectedRegions = cell.regions.reduce((regs, reg) => {
@@ -220,7 +253,8 @@ const addConnections = () => {
       setCellType(cell.x, cell.y, types.WALL);
 
       // Add the occasional extra door to a room
-      // if (oneIn(50)) setCell(cell.x, cell.y, types.DOOR);
+      if (oneIn(oneInXChanceOfExtraDoor)) setCell(cell.x, cell.y, types.DOOR);
+
       return false;
     });
   }
@@ -246,6 +280,8 @@ export const createDungeon = (props = {}) => {
   addCorridors();
 
   addConnections();
+
+  fillInDeadends();
 
   return dungeon;
 }

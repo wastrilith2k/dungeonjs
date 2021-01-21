@@ -1,8 +1,12 @@
 export const scale = 8;
 export const typeMap = ['wall', 'corridor', 'room', 'connection', 'door'];
-export const dungeonHeight = 160;
-export const dungeonWidth = 200;
-export const defaultRoomAttempts = 1000;
+export const dungeonHeight = 132;
+export const dungeonWidth = 230;
+export const defaultRoomAttempts = 1400;
+export const oneInXChanceOfExtraDoor = 50;
+export const maxFillInPasses = 30;
+export const fillInPercentage = 75;
+export const corridorTurnChance = 20;
 export const types = {
   WALL: 0,
   CORRIDOR: 1,
@@ -28,7 +32,6 @@ export const Direction = {
     y: 0
   }
 };
-export const corridorTurnChance = 20;
 export const colors = [
   "#63b598", "#ce7d78", "#ea9e70", "#a48a9e", "#c6e1e8", "#648177" ,"#0d5ac1" ,
   "#f205e6" ,"#1c0365" ,"#14a9ad" ,"#4ca2f9" ,"#a4e43f" ,"#d298e2" ,"#6119d0",

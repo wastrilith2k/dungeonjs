@@ -1,7 +1,7 @@
 export const scale = 8;
 export const typeMap = ['wall', 'corridor', 'room', 'connection', 'door'];
-export const dungeonHeight = 132;
-export const dungeonWidth = 230;
+export const dungeonHeight = Math.floor((Math.floor(window.innerHeight / 2) * 2) / scale) //132;
+export const dungeonWidth = Math.floor((Math.floor(window.innerWidth / 2) * 2) / scale)//230;
 export const defaultRoomAttempts = 1400;
 export const oneInXChanceOfExtraDoor = 50;
 export const maxFillInPasses = 30;
